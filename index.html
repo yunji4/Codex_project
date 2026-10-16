@@ -206,7 +206,7 @@
   .k-missed { background: var(--missed); }
   .k-reject { background: var(--reject); }
   .chart-scroll { overflow-x: auto; margin: 0 -6px; padding: 0 6px; }
-  #chart { width: 100%; min-width: 640px; height: auto; display: block; touch-action: pan-x pan-y; user-select: none; }
+  #chart { width: 100%; min-width: 680px; height: auto; display: block; touch-action: pan-x pan-y; user-select: none; }
   #chart:focus-visible { outline-offset: 4px; border-radius: 8px; }
   .chart-panel figcaption { border-top: 1px solid var(--grid); padding-top: 14px; margin-top: 8px; font-size: 13px; color: var(--muted); }
 
@@ -224,7 +224,13 @@
   .tick { stroke: var(--axis); stroke-width: 1; }
   .tick-label, .axis-title { fill: var(--muted); font: 11px "DM Mono", monospace; }
   .row-label { fill: var(--ink); font: 22px "Instrument Serif", Georgia, serif; }
-  .row-label tspan { fill: var(--muted); font: 11px "DM Mono", monospace; }
+  .row-pct { fill: var(--ink); font: 30px "Instrument Serif", Georgia, serif; font-variant-numeric: tabular-nums; }
+  .row-sub { fill: var(--muted); font: 10.5px "DM Mono", monospace; }
+  /* Gender figures fill up to each group's interview rate, hires in solid blue. */
+  .fig-base { fill: var(--surface); stroke: var(--axis); stroke-width: 1.2; }
+  .fig-fill { transform-box: fill-box; transform-origin: 50% 100%; transform: scaleY(0); transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1); }
+  .fig-fill.interview { fill: var(--interview-fill); }
+  .fig-fill.hired { fill: var(--hired); }
   .region { fill: var(--muted); font: 11px "DM Mono", monospace; }
   .cutoff-line { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 5; animation: march 1s linear infinite; }
   @keyframes march { to { stroke-dashoffset: -10; } }
@@ -262,17 +268,21 @@
 
   /* Resume card: shows whoever is hovered, or the pinned applicant. */
   .resume { position: relative; overflow: hidden; }
-  .resume-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
-  .avatar { width: 52px; height: 52px; flex: none; display: grid; place-items: center; border-radius: 50%; background: var(--soft); font: 22px "Instrument Serif", Georgia, serif; transition: background 0.3s, color 0.3s; }
-  .avatar.hired { background: var(--hired); color: var(--surface); }
-  .avatar.interview { background: var(--interview-fill); box-shadow: inset 0 0 0 2px var(--hired); }
-  .avatar.missed { background: var(--missed); color: var(--surface); }
+  .resume-top { display: flex; align-items: center; gap: 16px; margin-bottom: 22px; }
+  .card-kicker { display: block; color: var(--muted); margin-bottom: 16px; }
+  .avatar { width: 72px; height: 72px; flex: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--reject); transition: box-shadow 0.3s; }
+  .avatar svg { display: block; width: 100%; height: 100%; }
+  .avatar.hired { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--hired); }
+  .avatar.interview { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--interview-fill); }
+  .avatar.missed { box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--missed); }
+  .avatar.pop svg { animation: pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1); }
   .resume h2 { margin: 0; font: 400 28px/1.05 "Instrument Serif", Georgia, serif; }
   .resume .meta { margin: 3px 0 0; color: var(--muted); font-size: 13px; }
+  .avatar-wrap { position: relative; flex: none; }
   .stamp {
-    position: absolute; top: 20px; right: 18px;
+    position: absolute; left: -2px; bottom: -10px; z-index: 1; white-space: nowrap; background: var(--surface);
     border: 2px solid currentColor; border-radius: 6px; padding: 3px 9px;
-    font: 500 11px "DM Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase;
+    font: 500 10px "DM Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase;
     transform: rotate(-8deg); opacity: 0.9;
   }
   .stamp.hired { color: var(--hired); }
@@ -300,6 +310,10 @@
   .controls > p { margin: 0 0 20px; font-size: 13px; color: var(--muted); }
   .slider { margin-bottom: 16px; }
   .slider label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+  .slider .value { display: flex; align-items: center; gap: 8px; }
+  .slider .adj { font-size: 12px; color: var(--ink-2); }
+  .slider .adj.hot { color: var(--missed); }
+  .hint { margin: 2px 0 0; font-size: 12px; line-height: 1.5; color: var(--muted); min-height: 3em; }
   .slider output { font: 12px "DM Mono", monospace; background: var(--soft); padding: 1px 7px; border-radius: 4px; font-variant-numeric: tabular-nums; }
   input[type="range"] {
     -webkit-appearance: none; appearance: none; width: 100%; height: 4px; margin: 6px 0;
@@ -480,9 +494,9 @@
 
     <div class="side">
       <article class="panel resume" id="resume">
-        <span class="stamp" id="r-stamp"></span>
+        <span class="mono card-kicker">The person behind the dot</span>
         <div class="resume-top">
-          <div class="avatar" id="r-avatar" aria-hidden="true"></div>
+          <div class="avatar-wrap"><div class="avatar" id="r-avatar" aria-hidden="true"></div><span class="stamp" id="r-stamp"></span></div>
           <div><h2 id="r-name"></h2><p class="meta" id="r-meta"></p></div>
         </div>
         <ul id="r-lines"></ul>
@@ -499,6 +513,7 @@
         <div class="slider">
           <label for="cutoff"><span>Interview cutoff</span><output id="cutoff-out" for="cutoff"></output></label>
           <input type="range" id="cutoff" min="0" max="100" step="2">
+          <p class="hint" id="cutoff-hint"></p>
         </div>
         <div class="row">
           <button class="pill" id="reroll" type="button">New applicant pool</button>
@@ -547,7 +562,7 @@
 const N = 100
 const SCALE = 14
 const BIN = 2
-const W = 880, ML = 20, MR = 20, TOP = 44, ROW_H = 180, ROW_GAP = 40, R = 6, PITCH = 14
+const W = 880, ML = 124, MR = 20, TOP = 44, ROW_H = 180, ROW_GAP = 40, R = 6, PITCH = 14
 const BASELINES = [TOP + ROW_H, TOP + ROW_H * 2 + ROW_GAP]
 const H = BASELINES[1] + 46
 const SVG_NS = 'http://www.w3.org/2000/svg'
@@ -559,12 +574,24 @@ const GROUPS = [
   { key: 'w', label: 'Women', noun: 'woman' },
 ]
 
+// Each weight multiplies a fixed step of SCALE points. "flag" names the resume
+// field a penalty applies to, so the hint can say who it hits.
 const WEIGHTS = [
-  { key: 'skill', label: 'Skills test', part: 'Skills test' },
-  { key: 'exp', label: 'Years of experience', part: 'Experience' },
-  { key: 'gap', label: 'Career break penalty', part: 'Career break' },
-  { key: 'word', label: 'Penalty for "women\'s"', part: '"Women\'s"' },
+  { key: 'skill', label: 'Skills test', part: 'Skills test', type: 'boost',
+    hint: (pts) => (pts ? `Every 12 test points above average adds ${pts} to the score.` : 'Test scores don\'t move the score at all.') },
+  { key: 'exp', label: 'Years of experience', part: 'Experience', type: 'boost',
+    hint: (pts) => (pts ? `Every 3 years beyond average adds ${pts} to the score.` : 'Experience doesn\'t move the score at all.') },
+  { key: 'gap', label: 'Career break penalty', part: 'Career break', type: 'penalty', flag: 'gap',
+    hint: (pts) => (pts ? `A career break costs ${pts} points.` : 'A career break costs nothing.') },
+  { key: 'word', label: 'Penalty for "women\'s"', part: '"Women\'s"', type: 'penalty', flag: 'word',
+    hint: (pts) => (pts ? `The word "women's" costs ${pts} points.` : 'The word "women\'s" costs nothing.') },
 ]
+
+const ADJECTIVES = {
+  boost: ['Ignored', 'Barely counts', 'Counts', 'Counts a lot', 'Dominates'],
+  penalty: ['No penalty', 'Light penalty', 'Real penalty', 'Harsh penalty', 'Brutal penalty'],
+}
+const adjective = (type, v) => ADJECTIVES[type][v === 0 ? 0 : v <= 0.5 ? 1 : v <= 1 ? 2 : v <= 1.5 ? 3 : 4]
 
 const STEPS = [
   {
@@ -805,11 +832,29 @@ for (let s = 0; s <= 100; s += 10) {
 }
 el('text', { class: 'axis-title', x: x(50), y: BASELINES[1] + 40, 'text-anchor': 'middle' }, svg).textContent = 'Model score'
 
-const rowLabels = GROUPS.map((g, gi) => {
+// Pictogram outlines in a 56 by 96 box, used for the gender figures.
+const FIGURES = {
+  m: '<circle cx="28" cy="11" r="10"/><path d="M9 32a7 7 0 0 1 7-7h24a7 7 0 0 1 7 7v26h-6v38H31V64h-6v32H15V58H9z"/>',
+  w: '<circle cx="28" cy="11" r="10"/><path d="M17 25h22l11 39H40v32H31V66h-6v30h-9V64H6z"/>',
+}
+
+const chartDefs = el('defs', {}, svg)
+const rowFigures = GROUPS.map((g, gi) => {
+  const top = BASELINES[gi] - ROW_H
   el('line', { class: 'baseline', x1: ML, x2: W - MR, y1: BASELINES[gi], y2: BASELINES[gi] }, svg)
-  const t = el('text', { class: 'row-label', x: ML, y: BASELINES[gi] - ROW_H + 16 }, svg)
-  t.appendChild(document.createTextNode(g.label))
-  return el('tspan', { dx: 10 }, t)
+  el('text', { class: 'row-label', x: 0, y: top + 16 }, svg).textContent = g.label
+  el('clipPath', { id: `fig-${g.key}` }, chartDefs).innerHTML = FIGURES[g.key]
+  const fig = el('g', { transform: `translate(2, ${top + 28}) scale(0.9)` }, svg)
+  el('g', { class: 'fig-base' }, fig).innerHTML = FIGURES[g.key]
+  const fills = el('g', { 'clip-path': `url(#fig-${g.key})` }, fig)
+  const figure = {
+    interview: el('rect', { class: 'fig-fill interview', width: 56, height: 96 }, fills),
+    hired: el('rect', { class: 'fig-fill hired', width: 56, height: 96 }, fills),
+    pct: el('text', { class: 'row-pct', x: 0, y: top + 144 }, svg),
+    hiredText: el('text', { class: 'row-sub', x: 0, y: top + 174 }, svg),
+  }
+  el('text', { class: 'row-sub', x: 0, y: top + 160 }, svg).textContent = 'interviewed'
+  return figure
 })
 
 const dotLayer = el('g', {}, svg)
@@ -1081,11 +1126,68 @@ function renderStats() {
     return tr
   }))
 
-  GROUPS.forEach((g, gi) => { rowLabels[gi].textContent = `${s[g.key].interviewed} interviewed, ${s[g.key].hired} hired` })
+  GROUPS.forEach((g, gi) => {
+    const t = s[g.key]
+    const fig = rowFigures[gi]
+    fig.interview.style.transform = `scaleY(${state.entered ? t.rate : 0})`
+    fig.hired.style.transform = `scaleY(${state.entered ? t.hired / t.n : 0})`
+    countTo(fig.pct, t.rate * 100, (v) => `${Math.round(v)}%`)
+    fig.hiredText.textContent = `${t.hired} got the job`
+  })
+  $('cutoff-hint').textContent = `A score of ${state.cutoff} or more gets an interview. That's ${s.m.interviewed + s.w.interviewed} of ${state.pool.length} people.`
   updateFunnel(s)
 }
 
 /* ---------- resume card ---------- */
+
+const SKIN = ['#f5d2b3', '#e8bb93', '#d39a6c', '#b27a4f', '#8b5a3a', '#5f3c27']
+const HAIR = ['#1f1a16', '#3a281c', '#5e3b22', '#9a6a3a', '#d6b06a', '#9b9690']
+const SHIRT = ['#6b8f71', '#4f584e', '#8a6bb0', '#2f6f73', '#b08a4a', '#a35d6a']
+const BACKDROP = ['#e9ecdf', '#e6e1f0', '#f1e4d8', '#dfe9ea', '#ece4e4']
+
+// Draws a simple illustrated portrait. Features come from a seeded RNG,
+// so the same applicant always gets the same face.
+function face(a) {
+  const r = mulberry32(state.seed * 31 + a.id * 7919)
+  for (let i = 0; i < 4; i++) r()
+  const pick = (list) => list[Math.floor(r() * list.length)]
+  const skin = pick(SKIN)
+  const hair = r() < 0.08 ? HAIR[5] : pick(HAIR.slice(0, 5))
+  const shirt = pick(SHIRT)
+  const style = Math.floor(r() * 4)
+  const glasses = r() < 0.25
+  const back = []
+  const front = []
+  if (a.group === 'w') {
+    if (style === 0) back.push(`<path d="M22 38Q20 12 40 12T58 38L61 66Q40 60 19 66Z" fill="${hair}"/>`)
+    if (style === 1) back.push(`<path d="M22 38Q20 12 40 12T58 38L58 52Q40 48 22 52Z" fill="${hair}"/>`)
+    if (style === 2) back.push(`<circle cx="40" cy="12" r="8" fill="${hair}"/>`)
+    if (style === 3) for (const [cx, cy] of [[24, 30], [22, 44], [26, 56], [56, 30], [58, 44], [54, 56], [30, 18], [50, 18], [40, 14]]) back.push(`<circle cx="${cx}" cy="${cy}" r="9" fill="${hair}"/>`)
+    front.push(`<path d="M25 34Q26 18 40 18T55 34Q50 25 40 25T25 34Z" fill="${hair}"/>`)
+  } else {
+    if (style === 0) front.push(`<path d="M25 33Q24 16 40 16T55 33Q52 23 40 23T25 33Z" fill="${hair}"/>`)
+    if (style === 1) front.push(`<path d="M25 32Q25 17 40 17T55 32Q54 25 46 24Q34 23 25 32Z" fill="${hair}"/>`)
+    if (style === 2) for (const cx of [27, 33, 40, 47, 53]) front.push(`<circle cx="${cx}" cy="${21 + Math.abs(cx - 40) / 3}" r="6" fill="${hair}"/>`)
+    if (style === 3) front.push(`<path d="M26 30Q27 19 40 19T54 30Q50 25 40 25T26 30Z" fill="${hair}" opacity="0.55"/>`)
+    if (r() < 0.3) front.push(`<path d="M30 44Q40 56 50 44Q48 52 40 53Q32 52 30 44Z" fill="${hair}"/>`)
+  }
+  const eyes = glasses
+    ? '<circle cx="34" cy="37" r="5" fill="none" stroke="#2a2a2a" stroke-width="1.4"/><circle cx="46" cy="37" r="5" fill="none" stroke="#2a2a2a" stroke-width="1.4"/><path d="M39 37h2" stroke="#2a2a2a" stroke-width="1.4"/>'
+    : ''
+  return `<svg viewBox="0 0 80 80" aria-hidden="true">
+    <rect width="80" height="80" fill="${pick(BACKDROP)}"/>
+    ${back.join('')}
+    <path d="M12 80Q14 60 40 58Q66 60 68 80Z" fill="${shirt}"/>
+    <rect x="35" y="48" width="10" height="12" rx="3" fill="${skin}"/>
+    <ellipse cx="40" cy="36" rx="14.5" ry="16.5" fill="${skin}"/>
+    ${front.join('')}
+    <circle cx="34" cy="37" r="1.8" fill="#2a2a2a"/><circle cx="46" cy="37" r="1.8" fill="#2a2a2a"/>
+    ${eyes}
+    <path d="M31 32.5q3-1.6 6 0M43 32.5q3-1.6 6 0" stroke="#2a2a2a" stroke-width="1.2" fill="none" stroke-linecap="round" opacity="0.7"/>
+    <circle cx="31" cy="43" r="3" fill="#e0726a" opacity="0.18"/><circle cx="49" cy="43" r="3" fill="#e0726a" opacity="0.18"/>
+    <path d="M36 45q4 3.4 8 0" stroke="#2a2a2a" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+  </svg>`
+}
 
 const STAMPS = { hired: 'Hired', interview: 'No offer', missed: 'Rejected', reject: 'Rejected' }
 let lastStamped = null
@@ -1095,8 +1197,14 @@ function renderResume() {
   if (!a) return
   const group = GROUPS.find((g) => g.key === a.group)
   const avatar = $('r-avatar')
-  avatar.textContent = a.name.split(' ').map((part) => part[0]).join('')
-  avatar.className = `avatar ${a.kind}`
+  if (avatar.dataset.id !== String(a.id)) {
+    avatar.innerHTML = face(a)
+    avatar.dataset.id = a.id
+    avatar.classList.remove('pop')
+    void avatar.offsetWidth
+    avatar.classList.add('pop')
+  }
+  avatar.className = `avatar ${a.kind} pop`
   $('r-name').textContent = a.name
   $('r-meta').textContent = `Applicant ${a.id + 1}, ${group.noun}`
 
@@ -1175,9 +1283,10 @@ function buildSliders() {
     label.htmlFor = `w-${w.key}`
     const name = document.createElement('span')
     name.textContent = w.label
-    const out = document.createElement('output')
-    out.id = `o-${w.key}`
-    label.append(name, out)
+    const value = document.createElement('span')
+    value.className = 'value'
+    value.innerHTML = `<span class="adj" id="a-${w.key}"></span><output id="o-${w.key}"></output>`
+    label.append(name, value)
     const input = document.createElement('input')
     Object.assign(input, { type: 'range', id: `w-${w.key}`, min: 0, max: 2, step: 0.1 })
     input.addEventListener('input', () => {
@@ -1185,7 +1294,10 @@ function buildSliders() {
       state.step = null
       update()
     })
-    wrap.append(label, input)
+    const hint = document.createElement('p')
+    hint.className = 'hint'
+    hint.id = `h-${w.key}`
+    wrap.append(label, input, hint)
     return wrap
   }))
 }
@@ -1195,7 +1307,19 @@ function syncSliders() {
     const input = $(`w-${w.key}`)
     input.value = state.weights[w.key]
     paintRange(input)
-    $(`o-${w.key}`).textContent = state.weights[w.key].toFixed(1)
+    const v = state.weights[w.key]
+    $(`o-${w.key}`).textContent = v.toFixed(1)
+    const adj = $(`a-${w.key}`)
+    adj.textContent = adjective(w.type, v)
+    adj.classList.toggle('hot', w.type === 'penalty' && v > 1)
+    let hint = w.hint(Math.round(SCALE * v))
+    if (w.flag) {
+      const count = (g) => state.pool.filter((a) => a.group === g && a[w.flag]).length
+      const women = count('w')
+      const men = count('m')
+      hint += ` It applies to ${women} ${women === 1 ? 'woman' : 'women'} and ${men} ${men === 1 ? 'man' : 'men'} in this pool.`
+    }
+    $(`h-${w.key}`).textContent = hint
   }
 }
 
@@ -1426,6 +1550,7 @@ function enterChart() {
   state.entered = true
   wave(700)
   layout()
+  renderStats()
   renderResume()
 }
 
